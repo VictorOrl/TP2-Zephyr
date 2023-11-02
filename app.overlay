@@ -1,37 +1,46 @@
 / {
-
     leds {
         compatible = "gpio-leds";
         ledorange: led_orange {
             gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
             label = "Orange LED";
+        }; 
+    };
+
+    gpio_keys {
+        compatible = "gpio-keys";
+
+        dht11: dht11 {
+            compatible = "aosong,dht";
+            status = "okay";
+            dio-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+            label = "DHT11";
+        };
+
+        button1: button_1 {
+            gpios = <&gpio0 16 GPIO_ACTIVE_HIGH>;
+            label = "Button 1";
+        };
+
+        buzzer: buzzer_pin {
+            gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+            label = "Buzzer";
         };
     };
 
     aliases {
         led-orange = &ledorange;
         afficheur-print = &afficheur;
+        btn1 = &button1;
+        buz = &buzzer;
+        dht = &dht11;
     };
-
-    gpio_keys {
-    compatible = "gpio-keys";
-
-        dht11: dht11 {
-            compatible = "aosong,dht";
-            status = "okay";
-            dio-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
-            label = "XHT11";
-            };
-            };
-
-
 };
 
 &i2c0 {
-    afficheur: gpio@27 {
+    afficheur: afficheur@27 {
         compatible = "i2c-device";
         reg = <0x27>;
     };
 };
-
 
