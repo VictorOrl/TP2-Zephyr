@@ -1,42 +1,56 @@
+//main.c
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include <stdio.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/device.h>   
-
 #include "../inc/lcd_screen_i2c.h"
 
-#define BUTTON1_NODE DT_ALIAS(btn_1)
-#define BUZZER_NODE DT_ALIAS(buz)
 
+#define BUZZER_NODE DT_ALIAS(buz)
 #define LED_ORANGE_NODE DT_ALIAS(led_orange)
 #define AFFICHEUR_NODE DT_ALIAS(afficheur_print)
+#define BUTTON1_NODE DT_ALIAS(btn1)
 
+const struct gpio_dt_spec button_gpio = GPIO_DT_SPEC_GET_OR(BUTTON1_NODE, gpios, {0});
+const struct gpio_dt_spec buz_gpio = GPIO_DT_SPEC_GET_OR(BUTTON1_NODE, gpios, {0});
 const struct gpio_dt_spec led_orange_gpio = GPIO_DT_SPEC_GET_OR(LED_ORANGE_NODE, gpios, {0});
 const struct i2c_dt_spec afficheur = I2C_DT_SPEC_GET(AFFICHEUR_NODE);
 const struct device *const dht11 = DEVICE_DT_GET_ONE(aosong_dht);
 
-volatile bool buzzer_state = false;  // Variable pour le statut du buzzer
+static struct k_work button_work;
 
-#if 0 // Ici, j'ai désactivé la fonction car elle ne semble pas être utilisée pour le moment.
-void button1_irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
-    buzzer_state = !buzzer_state;
-    //gpio_pin_set(buzzer_gpio.port, buzzer_gpio.pin, buzzer_state);
-    //printk("Buzzer state changed to: %s\n", buzzer_state ? "ON" : "OFF");
+void button_isr(const struct device *dev, struct gpio_callback *cb, uint32_t pins) 
+{
+    k_work_submit(&button_work);
 }
-#endif
+
+void button_pressed_handler(struct k_work *work) 
+{
+    write_lcd(&afficheur,"", LCD_LINE_1);
+    write_lcd(&afficheur,"", LCD_LINE_2);
+    write_lcd(&afficheur, "MONNNSTREEE !!", LCD_LINE_1);
+}
+
 
 int main(void) 
 {
-	gpio_pin_configure_dt(&led_orange_gpio, GPIO_OUTPUT_HIGH);
-	
-    // Initialize the LCD
     init_lcd(&afficheur);
+	gpio_pin_configure_dt(&led_orange_gpio, GPIO_OUTPUT_HIGH);
 
-    // Write "COucou" to the LCD
+    gpio_pin_configure_dt(&button_gpio, GPIO_INPUT);
+    gpio_pin_interrupt_configure_dt(&button_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+
+    static struct gpio_callback button_cb_data;
+    gpio_init_callback(&button_cb_data, button_isr, BIT(button_gpio.pin));
+    gpio_add_callback(button_gpio.port, &button_cb_data);
+
+    k_work_init(&button_work, button_pressed_handler);
+    
+    while (5)
+    {
     write_lcd(&afficheur, HELLO_MSG, LCD_LINE_1);
-
     k_sleep(K_SECONDS(1));
     struct sensor_value temp, humidity;
 
@@ -47,9 +61,10 @@ int main(void)
     double temp_d = sensor_value_to_double(&temp);
     double humidity_d = sensor_value_to_double(&humidity);
     
-    printk("Temp: %d ; Humidity %d %% ", temp.val1, humidity.val1);
+    printk("Temp: %d ; Humidity %d %% ",temp.val1,humidity.val1);
+    }
+    
 
-    
-    k_sleep(K_SECONDS(5));
-    
 }
+
+
