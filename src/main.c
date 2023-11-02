@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/device.h>   
 
 #include "../inc/lcd_screen_i2c.h"
 
@@ -35,9 +36,9 @@ int main(void)
 
     double temp_d = sensor_value_to_double(&temp);
     double humidity_d = sensor_value_to_double(&humidity);
-    printk("test");
+    
+    printk("Temp: %d ; Humidity %d %% ",temp.val1,humidity.val1);
 
-    printf("Temperature: %.2f°C, Humidity: %.2f%%  \n ", sensor_value_to_double(&temp), sensor_value_to_double(&humidity));
     
     }
 

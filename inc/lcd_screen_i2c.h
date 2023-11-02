@@ -21,7 +21,7 @@ struct i2c_dt_spec;
 #define LCD_WIDTH 16    // Max number of carac per lines
 
 #define HELLO_MSG "NATHAN est le"
-#define ZEPHYR_MSG "plus fort"
+#define ZEPHYR_MSG "plus fort et beau"
 
 #define START_ALERT_MONITORING_MSG_1 "Alarm"
 #define START_ALERT_MONITORING_MSG_2 "Protection"
